@@ -1,5 +1,12 @@
 {% extends "template.html" %}
 
 {% block content %}
-<p>eitt form fyrir nytt paste, annad fyrir lookup a paste</p>
+<h1>Create a new paste </h1>
+<form action="/createnewpaste/" class="" method="post">
+    <textarea name="textarea" rows="10" cols="80" placeholder="Put your text here"></textarea><br>
+    <input type="submit" name="" class="btn btn-success" value="submit paste">
+</form>
+{% if url %}
+<p>the link is {{url}}</p>
+{% endif %}
 {% endblock %}

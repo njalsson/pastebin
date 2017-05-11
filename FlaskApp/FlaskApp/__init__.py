@@ -1,4 +1,8 @@
 import gc #garbage collector
+import string
+import random
+
+
 from flask import Flask, render_template, flash, request, url_for, redirect, session, g #flask
 from dbconnect import connection #database file
 from wtforms import Form, BooleanField, StringField, PasswordField, validators
@@ -104,7 +108,7 @@ def logout():
 	return redirect(url_for('login'))
 
 
-@app.route('/mypage/')
+@app.route('/mypage/', methods=['POST'])
 def mypage():
 	if session['logged_in'] == False:
 		return render_template('dash.html')
@@ -134,6 +138,39 @@ def changepassword():
 		return render_template('mypage.html')
 	except Exception as e:
 		return(str(e))
+
+
+
+@app.route("/createnewpaste/", methods=["POST"])
+def createnewpaste():
+	try:
+		text = request.form['textarea']
+		if len(text) > 0: #continue
+			url = id_generator() # 10 digits long
+			if session['logged_in'] == True: #user is logged in
+				author = session['username']
+				c, conn = connection()
+				#todo create url
+				c.execute("INSERT INTO pastes (url, text, author ) VALUES (%s, %s, %s)", (thwart(url), thwart(text), thwart(author)))
+			else:
+				c.execute("INSERT INTO pastes (url, text ) VALUES (%s, %s)", (thwart(url), thwart(text)))
+			conn.commit()
+			c.close()
+			conn.close()
+			gc.collect()
+
+			return redirect(url_for('newpaste')',url)
+		return render_template('dash.html')
+	except Exception as e:
+		return render_template('dash.html')
+
+
+
+def id_generator(size=10, chars=string.ascii_uppercase + string.digits):
+	return ''.join(random.choice(chars) for _ in range(size))
+
+
+
 #####error handlers
 @app.errorhandler(404)
 def page_not_found(e):

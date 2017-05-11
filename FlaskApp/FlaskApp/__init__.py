@@ -83,11 +83,14 @@ def hello():
 			c, conn = connection()
 			data = c.execute("SELECT * FROM users WHERE name = (%s)", thwart(name))
 			data = c.fetchone()[2]
+			#email = c.fetchone()[3]
 			#checka hvort pass matcha
 			dotheymatch = sha256_crypt.verify(password, data)
 			if dotheymatch:
 				session['logged_in'] = True
 				session['username'] = name
+				#session['email'] = email
+
 				c.close()
 				conn.close()
 				gc.collect()
@@ -112,6 +115,19 @@ def logout():
 def mypage():
 	return render_template('mypage.html')
 
+@app.route('/mypastes/', methods = ['POST', 'GET'])
+def userpastas():
+	if session['logged_in'] == True:
+		#grab all his pastas from db.
+		user = session['username']
+		c, conn = connection()
+		c.execute("SELECT * FROM pastes WHERE user = (%s)", (thwart(user)))
+		results = c.fetchall()
+		#for x in results:
+		#todo in jinai
+
+
+
 
 @app.route('/ChangePassword/', methods = ['POST'])
 def changepassword():
@@ -133,13 +149,32 @@ def changepassword():
 				conn.close()
 				gc.collect()
 				message = 'password has been changed'
-				return render_template('mypage.html', message)
+				return render_template('mypage.html', message=message)
 		message = 'something went wrong'
-		return render_template('mypage.html')
+		return render_template('mypage.html',message = message)
 	except Exception as e:
 		return(str(e))
 
 
+@app.route('/changeemail/')
+def changeemail():
+	try:
+		newemail = request.form('email')
+		if len(newemail) > 0 and session['logged_in'] == True: #continue
+			name = session['username']
+			c, conn  = connection()
+			c.execute("UPDATE users SET email = (%s) WHERE name = (%s)", (thwart(email), thwart(name)))
+			conn.commit()
+			c.close()
+			conn.close()
+			gc.collect()
+			message = "email has been changed to {}".format(email)
+			return render_template('mypage.html', message = message)
+
+		message = "something went wrong"
+		return render_template('mypage.html', message = message)
+	except Exception as e:
+		return render_template('mypage.html', message = message)
 
 @app.route("/createnewpaste/", methods=["POST"])
 def createnewpaste():
@@ -160,7 +195,7 @@ def createnewpaste():
 			gc.collect()
 
 			#return redirect(url_for('newpaste')',url)
-		return render_template('dash.html',url)
+		return render_template('dash.html',text=url)
 	except Exception as e:
 		return render_template('dash.html')
 
@@ -176,7 +211,7 @@ def findPastes():
 		c.close()
 		conn.close()
 		gc.collect()
-		return render_template('post.html',text=text)
+		return render_template('dash.html',text=text)
 	except Exception as e:
 		return render_template('dash.html')
 

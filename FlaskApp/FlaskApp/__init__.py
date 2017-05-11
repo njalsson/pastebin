@@ -108,10 +108,8 @@ def logout():
 	return redirect(url_for('login'))
 
 
-@app.route('/mypage/', methods=['POST'])
+@app.route('/mypage/', methods=['POST','GET'])
 def mypage():
-	if session['logged_in'] == False:
-		return render_template('dash.html')
 	return render_template('mypage.html')
 
 
@@ -127,11 +125,13 @@ def changepassword():
 			data = c.execute("SELECT * FROM users WHERE name = (%s)", thwart(session['username']))
 			data = c.fetchone()[2]
 			#checka hvort pass matcha
-			dotheymatch = sha256_crypt.verify(pass2, data)
+			dotheymatch = sha256_crypt.verify(pass3, data)
 			if dotheymatch:
-				c.execute("UPDATE users SET password = (%s) WHERE name = (%s)", (sha256_crypt.hash(thwart(pass2)), thwart(session['username'])));
+				c.execute("UPDATE users SET password = (%s) WHERE name = (%s)", (sha256_crypt.hash(thwart(pass3)), thwart(session['username'])));
+				conn.commit()
 				c.close()
 				conn.close()
+				gc.collect()
 				message = 'password has been changed'
 				return render_template('mypage.html', message)
 		message = 'something went wrong'
@@ -159,12 +159,26 @@ def createnewpaste():
 			conn.close()
 			gc.collect()
 
-			return redirect(url_for('newpaste')',url)
-		return render_template('dash.html')
+			#return redirect(url_for('newpaste')',url)
+		return render_template('dash.html',url)
 	except Exception as e:
 		return render_template('dash.html')
 
 
+@app.route('/findpaste/', methods=["POST"])
+def findPastes():
+	try:
+		variable = request.form['name']
+		c, conn = connection()
+		x = c.execute("SELECT * FROM pastes WHERE url = (%s)", (thwart(variable)))
+		x = c.fetchone()[2]
+		text = x
+		c.close()
+		conn.close()
+		gc.collect()
+		return render_template('post.html',text=text)
+	except Exception as e:
+		return render_template('dash.html')
 
 def id_generator(size=10, chars=string.ascii_uppercase + string.digits):
 	return ''.join(random.choice(chars) for _ in range(size))
@@ -177,6 +191,9 @@ def page_not_found(e):
     return render_template('404.html'), 404
 
 
+@app.errorhandler(405)
+def method_not_allowed(e):
+	return render_template('405.html'), 405
 
 @app.errorhandler(500)
 def exception_handler(e):

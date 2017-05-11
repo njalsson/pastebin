@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title></title>
-    </head>
-    <body>
-        <h1>page not found, error 404</h1>
-    </body>
-</html>
+{% extend "template.html" %}
+
+{% block content %}
+<h1>404 error</h1>
+<img src="{{ url_for('static', filename='images/sad-dino.jpg' )}}" alt="sad dino">
+{% endblock %}

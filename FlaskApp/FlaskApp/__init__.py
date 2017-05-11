@@ -7,10 +7,11 @@ from MySQLdb import escape_string as thwart
 
 app = Flask(__name__)
 
+
 @app.route("/")
 def mornin():
 	flash('tesoantuoaseu')
-	return render_template("header.html")
+	return render_template("dash.html")
 
 
 @app.route('/dashboard/')
@@ -105,8 +106,46 @@ def logout():
 
 @app.route('/mypage/')
 def mypage():
+	if session['logged_in'] == False:
+		return render_template('dash.html')
 	return render_template('mypage.html')
 
+
+@app.route('/ChangePassword/', methods = ['POST'])
+def changepassword():
+	try:
+		pass1 = request.form['password1']
+		pass2 = request.form['password2']
+		pass3 = request.form['password3']
+		message = None
+		if len(pass1) > 0 and len(pass2) > 0 and len(pass3) > 0 and pass2 == pass3:
+			c, conn = connection()
+			data = c.execute("SELECT * FROM users WHERE name = (%s)", thwart(session['username']))
+			data = c.fetchone()[2]
+			#checka hvort pass matcha
+			dotheymatch = sha256_crypt.verify(pass2, data)
+			if dotheymatch:
+				c.execute("UPDATE users SET password = (%s) WHERE name = (%s)", (sha256_crypt.hash(thwart(pass2)), thwart(session['username'])));
+				c.close()
+				conn.close()
+				message = 'password has been changed'
+				return render_template('mypage.html', message)
+		message = 'something went wrong'
+		return render_template('mypage.html')
+	except Exception as e:
+		return(str(e))
+#####error handlers
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+
+
+@app.errorhandler(500)
+def exception_handler(e):
+    return render_template('500.html'), 500
+
+###starting the program
 
 if __name__ == "__main__":
 	app.run()

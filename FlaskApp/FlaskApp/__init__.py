@@ -126,6 +126,19 @@ def userpastas():
 		#for x in results:
 		#todo in jinai
 
+@app.route('/deleteuser/', methods=['POST'])
+def deleteuser():
+	try:
+		username = session['username']
+		c, conn = connection()
+		c.execute("DELETE FROM users WHERE name = (%s)", username)
+		conn.commit()
+		conn.close()
+		c.close()
+		gc.collect()
+		return render_template('dash.html')
+	except Exception as e:
+		return(str(e))
 
 
 
@@ -141,9 +154,9 @@ def changepassword():
 			data = c.execute("SELECT * FROM users WHERE name = (%s)", thwart(session['username']))
 			data = c.fetchone()[2]
 			#checka hvort pass matcha
-			dotheymatch = sha256_crypt.verify(pass3, data)
+			dotheymatch = sha256_crypt.verify(pass1, data)
 			if dotheymatch:
-				c.execute("UPDATE users SET password = (%s) WHERE name = (%s)", (sha256_crypt.hash(thwart(pass3)), thwart(session['username'])));
+				c.execute("UPDATE users SET password = (%s) WHERE name = (%s)", (sha256_crypt.hash(pass3), thwart(session['username'])));
 				conn.commit()
 				c.close()
 				conn.close()
@@ -156,25 +169,25 @@ def changepassword():
 		return(str(e))
 
 
-@app.route('/changeemail/')
+@app.route('/changeusername/')
 def changeemail():
 	try:
-		newemail = request.form('email')
-		if len(newemail) > 0 and session['logged_in'] == True: #continue
+		newuser = request.form('username')
+		if len(newuser) > 0 and session['logged_in'] == True: #continue
 			name = session['username']
 			c, conn  = connection()
-			c.execute("UPDATE users SET email = (%s) WHERE name = (%s)", (thwart(email), thwart(name)))
+			c.execute("UPDATE users SET name = (%s) WHERE name = (%s)", (thwart(newuser), thwart(name)))
 			conn.commit()
 			c.close()
 			conn.close()
 			gc.collect()
-			message = "email has been changed to {}".format(email)
+			message = "username has been changed to {}".format(newname)
 			return render_template('mypage.html', message = message)
 
 		message = "something went wrong"
 		return render_template('mypage.html', message = message)
 	except Exception as e:
-		return render_template('mypage.html', message = message)
+		return render_template('mypage.html')
 
 @app.route("/createnewpaste/", methods=["POST"])
 def createnewpaste():

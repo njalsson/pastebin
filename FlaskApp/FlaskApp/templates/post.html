@@ -1,5 +1,14 @@
 {% extends "template.html" %}
 
 {% block content %}
-<p>{{text}}</p>
+    <p>{{message}}</p>
+    <h3>Url's by {{ session['username'] }}</h3>
+    {% if array %}
+        {% for row in array %}
+            <tr>
+                <td>{{ row}}</td><br>
+            </tr>
+        {% endfor %}
+
+    {% endif %}
 {% endblock %}

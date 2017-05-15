@@ -11,7 +11,9 @@
 {% endif %}
 <h1>find paste</h1>
 <form action="/findpaste/"  method="post">
-    <input type="text" name="name" value="" placeholder="url for the paste"><br><br>
+    <div class="col-md-6">
+        <input type="text" name="name" class="form-control"  placeholder="url" value="{{request.form.password}}">
+    </div>
     <input type="submit"  class="btn btn-success" value="find paste">
 </form><br><br><br><br>
 <p>{{text}}</p>

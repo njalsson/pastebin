@@ -116,16 +116,27 @@ def logout():
 def mypage():
 	return render_template('mypage.html')
 
-@app.route('/mypastes/', methods = ['POST', 'GET'])
-def userpastas():
-	if session['logged_in'] == True:
-		#grab all his pastas from db.
-		user = session['username']
-		c, conn = connection()
-		c.execute("SELECT * FROM pastes WHERE user = (%s)", (thwart(user)))
-		results = c.fetchall()
-		#for x in results:
-		#todo in jinai
+@app.route('/myuploads/', methods=['POST', 'GET'])
+def mypastes():
+	try:
+		if session['logged_in'] == True:
+			#grab all his pastas from db.
+			user = session['username']
+			c, conn = connection()
+			c.execute("SELECT url FROM pastes WHERE author = (%s)", (thwart(user)))
+			results = c.fetchall()
+			c.close()
+			conn.close()
+			gc.collect()
+			message = "Request was a success"
+			return render_template('post.html', array=results)
+			#for x in results:
+			#todo in jinai
+	except Exception as e:
+		message = "something went wrong"
+		return render_template('post.html', message=message)
+
+
 
 @app.route('/deleteuser/', methods=['POST'])
 def deleteuser():
@@ -136,6 +147,7 @@ def deleteuser():
 		conn.commit()
 		conn.close()
 		c.close()
+		session.clear()
 		gc.collect()
 		return render_template('dash.html')
 	except Exception as e:
@@ -169,26 +181,26 @@ def changepassword():
 	except Exception as e:
 		return(str(e))
 
-
-@app.route('/changeusername/')
-def changeemail():
-	try:
-		newuser = request.form('username')
-		if len(newuser) > 0 and session['logged_in'] == True: #continue
-			name = session['username']
-			c, conn  = connection()
-			c.execute("UPDATE users SET name = (%s) WHERE name = (%s)", (thwart(newuser), thwart(name)))
-			conn.commit()
-			c.close()
-			conn.close()
-			gc.collect()
-			message = "username has been changed to {}".format(newname)
-			return render_template('mypage.html', message = message)
-
-		message = "something went wrong"
-		return render_template('mypage.html', message = message)
-	except Exception as e:
-		return render_template('mypage.html')
+# tharf ekki
+# @app.route('/changeusername/')
+# def changeemail():
+# 	try:
+# 		newuser = request.form('username')
+# 		if len(newuser) > 0 and session['logged_in'] == True: #continue
+# 			name = session['username']
+# 			c, conn  = connection()
+# 			c.execute("UPDATE users SET name = (%s) WHERE name = (%s)", (thwart(newuser), thwart(name)));
+# 			conn.commit()
+# 			c.close()
+# 			conn.close()
+# 			gc.collect()
+# 			message = "username has been changed"
+# 			return render_template('mypage.html', message = message)
+#
+# 		message = "something went wrong"
+# 		return render_template('mypage.html', message = message)
+# 	except Exception as e:
+# 		return render_template('mypage.html')
 
 @app.route("/createnewpaste/", methods=["POST"])
 def createnewpaste():
@@ -208,11 +220,12 @@ def createnewpaste():
 			c.close()
 			conn.close()
 			gc.collect()
+			text = "the url is : " + url
 
 			#return redirect(url_for('newpaste')',url)
-		return render_template('dash.html',text=url)
+		return render_template('dash.html',text=text)
 	except Exception as e:
-		return render_template('dash.html'text=message)
+		return render_template('dash.html',text=message)
 
 
 @app.route('/findpaste/', methods=["POST"])

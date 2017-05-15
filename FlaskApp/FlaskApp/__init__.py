@@ -192,6 +192,7 @@ def changeemail():
 
 @app.route("/createnewpaste/", methods=["POST"])
 def createnewpaste():
+	message = "Something went wrong"
 	try:
 		text = request.form['textarea']
 		if len(text) > 0: #continue
@@ -211,7 +212,7 @@ def createnewpaste():
 			#return redirect(url_for('newpaste')',url)
 		return render_template('dash.html',text=url)
 	except Exception as e:
-		return render_template('dash.html')
+		return render_template('dash.html'text=message)
 
 
 @app.route('/findpaste/', methods=["POST"])

@@ -97,7 +97,8 @@ def hello():
 				return redirect(url_for('dashboard'))
 		return render_template('login.html')
 	except Exception as e:
-		return(str(e))
+		message = "login did not work correctly"
+		return render_template('login.html', message=message)
 
 
 @app.route('/login/', methods=["GET","POST"])
